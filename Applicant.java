@@ -18,7 +18,8 @@ public class Applicant {
 		}
 		
 		
-		for (int i = 0; i < Driver.qualityHierarchy.length; i++) {
+//		for (int i = 0; i < Driver.qualityHierarchy.length; i++) {
+		for (int i = 0; i < 5; i++) {
 			double score = Math.random()*5;
 			finalScore += score*Driver.WEIGHTS[i];
 		}

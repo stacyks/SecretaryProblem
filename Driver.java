@@ -1,17 +1,38 @@
 package main;
 import java.util.*;
 
-public class Driver {
+public class Driver implements Runnable{
+
 	protected static final double [] WEIGHTS = {.3, .25, .2, .15, .1};
-	private static final String [] QUALITIES = 
-		{"Work Experience", "Communication Skills", "Time Management", "Organization", "Punctuality"};
+	private static Integer numWorks = 0;
+	private static int applicantPoolSize;
+//	private int numTrials;
+	//	private static final String [] QUALITIES = 
+	//		{"Work Experience", "Communication Skills", "Time Management", "Organization", "Punctuality"};
 	//	private Applicant bestApplicant = new Applicant (0);
-	private Set <Applicant> applicantPool = new HashSet <Applicant> ();
+	//	private Set <Applicant> applicantPool = new HashSet <Applicant> ();
 	//	private String [] qualityRanking = new String [5];
-	protected static String [] qualityHierarchy = QUALITIES;
+	//	protected static String [] qualityHierarchy = new String [5];
 
 
-	public Driver () {
+	public Driver (int applicantPoolSize) {
+
+		this.applicantPoolSize = 100;
+
+//		this.numTrials = 10;
+
+
+		//		for (int i = 0; i < 1000; i++) {
+		//			boolean result = runTrial((int) (Math.random()*1000)+1);
+		//			if (result) {
+		//				numWorks++;
+		//			}
+		//		}
+		//
+		//		System.out.println((double) (numWorks)/1000);
+
+
+
 		//		Scanner keyboard = new Scanner (System.in);
 		//
 		//		//set up: create rank for each quality of a secretary
@@ -39,32 +60,44 @@ public class Driver {
 
 		//determine how many applicants are in the pool. 
 		//make sure this number isn't 0
-//				System.out.println("Applicants to generate: ");
-//				int numApplicants = keyboard.nextInt();
+		//				System.out.println("Applicants to generate: ");
+		//				int numApplicants = keyboard.nextInt();
 
 		//determine how many trials of this should be conducted. 
-//						System.out.println("Number of trials: ");
-//						int trials = keyboard.nextInt();
+		//						System.out.println("Number of trials: ");
+		//						int trials = keyboard.nextInt();
 
 
-		int numWorks = 0;
-		
-		for (int i = 0; i < 1000000; i++) {
-			boolean result = runTrial((int) (Math.random()*100000)+1);
-			if (result) {
-				numWorks++;
-			}
-		}
-
-		System.out.println((double) (numWorks)/1000000);
 
 
 		//		keyboard.close();
+
+
 	}
 
+	private static class Trial {
 
-	private class Trial {
-		private Iterator <Applicant> iter = applicantPool.iterator();
+		private Set <Applicant> applicantPool = new HashSet <Applicant> ();
+		private Iterator <Applicant> iter = null;
+
+		
+		private Applicant findBestApplicant (int numApplicants) {
+			Applicant bestApplicant = new Applicant (0);
+
+			//finds the best applicant BF style		
+			while (applicantPool.size() != numApplicants) {
+				Applicant toAdd = new Applicant (1);
+				applicantPool.add(toAdd);
+
+				if (toAdd.getFinalScore() > bestApplicant.getFinalScore()) {
+					bestApplicant = toAdd;
+				}
+			}
+
+			//			set up iterator to find best applicant.
+			this.iter = applicantPool.iterator();
+			return bestApplicant;
+		}
 
 		public Applicant findBestSoFarApplicant (int numApplicants) {
 
@@ -96,42 +129,47 @@ public class Driver {
 
 		}
 
-	}
+		public boolean runTrial (int numApplicants) {
 
-	public boolean runTrial (int numApplicants) {
+			Applicant bestApplicant = findBestApplicant(numApplicants);
+			Applicant bestSoFarApplicant = findBestSoFarApplicant(numApplicants);	
 
-		Applicant bestApplicant = findBestApplicant(numApplicants);
-		Trial trial = new Trial ();
-		Applicant bestSoFarApplicant = trial.findBestSoFarApplicant(numApplicants);	
+			//reset trial for next one.
+			applicantPool.clear();
+			Applicant.applicantCount = 0;
 
-		//reset trial for next one.
-		applicantPool.clear();
-		Applicant.applicantCount = 0;
+						System.out.println("bestApp: " + bestApplicant.getApplicantNumber() + " guessApp: " + bestSoFarApplicant.getApplicantNumber());
+			return bestSoFarApplicant.getApplicantNumber() == bestApplicant.getApplicantNumber();
 
-//		System.out.println("bestApp: " + bestApplicant.getApplicantNumber() + " guessApp: " + bestSoFarApplicant.getApplicantNumber());
-		return bestSoFarApplicant.getApplicantNumber() == bestApplicant.getApplicantNumber();
-
-	}
-
-	private Applicant findBestApplicant (int numApplicants) {
-		Applicant bestApplicant = new Applicant (0);
-
-		//finds the best applicant BF style		
-		while (applicantPool.size() != numApplicants) {
-			Applicant toAdd = new Applicant (1);
-			applicantPool.add(toAdd);
-
-			if (toAdd.getFinalScore() > bestApplicant.getFinalScore()) {
-				bestApplicant = toAdd;
-			}
 		}
 
-//		System.out.println("pool size: " + applicantPool.size());
-		return bestApplicant;
+
+
 	}
 
 
-	public static void main (String [] args) {
-		Driver x = new Driver ();
+
+
+	@Override
+	public void run() {
+		Trial t = new Trial ();
+		t.runTrial(applicantPoolSize);
+	}
+
+	
+	public static void main (String [] args) throws InterruptedException {
+		
+
+		int numTrials = 100;
+		Thread [] trials = new Thread[numTrials];
+		
+		for (int i = 0; i < trials.length; i++) {
+			trials[i] = new Thread (new Driver (100));
+			trials[i].start();
+		}
+		
+		for (int i = 0; i < trials.length; i++) {
+			trials[i].join();
+		}
 	}
 }
